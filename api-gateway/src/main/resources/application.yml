@@ -1,0 +1,13 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+
+# Optional: Actuator configuration for monitoring
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

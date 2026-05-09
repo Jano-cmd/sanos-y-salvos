@@ -1,0 +1,13 @@
+server:
+  port: 8085
+
+spring:
+  application:
+    name: match-service
+
+# Optional: Actuator configuration for monitoring
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
