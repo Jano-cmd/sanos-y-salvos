@@ -1,8 +1,13 @@
 package com.example.authservice.dto;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
+
 public class RegisterRequest {
     private String name;
+
+    @JsonAlias("username")
     private String email;
+
     private String password;
 
     // Getters and Setters

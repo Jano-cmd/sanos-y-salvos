@@ -24,24 +24,39 @@ public class AuthService {
     }
 
     public User register(RegisterRequest request) {
-        if (userRepository.findByEmail(request.getEmail()) != null) {
-            throw new ResourceAlreadyExistsException("User already exists with email: " + request.getEmail());
+        String email = normalize(request.getEmail());
+        String name = normalize(request.getName());
+        String password = request.getPassword();
+
+        if (email == null || name == null || password == null || password.isBlank()) {
+            throw new IllegalArgumentException("name, email and password are required");
+        }
+
+        if (userRepository.findByEmail(email) != null) {
+            throw new ResourceAlreadyExistsException("User already exists with email: " + email);
         }
 
         User user = new User();
-        user.setName(request.getName());
-        user.setEmail(request.getEmail());
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setName(name);
+        user.setEmail(email);
+        user.setPassword(passwordEncoder.encode(password));
         return userRepository.save(user);
     }
 
     public Map<String, Object> login(LoginRequest request) {
-        User user = userRepository.findByEmail(request.getEmail());
+        String email = normalize(request.getEmail());
+        String password = request.getPassword();
+
+        if (email == null || password == null || password.isBlank()) {
+            throw new InvalidCredentialsException("Invalid email or password");
+        }
+
+        User user = userRepository.findByEmail(email);
         if (user == null) {
             throw new InvalidCredentialsException("Invalid email or password");
         }
 
-        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+        if (!passwordEncoder.matches(password, user.getPassword())) {
             throw new InvalidCredentialsException("Invalid email or password");
         }
 
@@ -51,6 +66,15 @@ public class AuthService {
         response.put("token", "mock-jwt-token");
         response.put("user", user);
         return response;
+    }
+
+    private String normalize(String value) {
+        if (value == null) {
+            return null;
+        }
+
+        String normalized = value.trim();
+        return normalized.isEmpty() ? null : normalized;
     }
 
 }
