@@ -3,6 +3,7 @@ package com.example.authservice.controller;
 import com.example.authservice.dto.LoginRequest;
 import com.example.authservice.dto.RegisterRequest;
 import com.example.authservice.service.AuthService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,7 +23,7 @@ public class AuthController {
     public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
         try {
             var user = authService.register(request);
-            return ResponseEntity.ok(user);
+            return ResponseEntity.status(HttpStatus.CREATED).body(user);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
@@ -34,7 +35,7 @@ public class AuthController {
             var response = authService.login(request);
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", e.getMessage()));
         }
     }
 

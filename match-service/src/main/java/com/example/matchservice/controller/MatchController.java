@@ -17,8 +17,8 @@ public class MatchController {
         this.matchService = matchService;
     }
 
-    @GetMapping("/{reportId}")
-    public ResponseEntity<List<Match>> getMatches(@PathVariable String reportId) {
+    @GetMapping
+    public ResponseEntity<List<Match>> getMatches(@RequestParam String reportId) {
         return ResponseEntity.ok(matchService.findMatches(reportId));
     }
 
