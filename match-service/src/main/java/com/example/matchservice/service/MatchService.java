@@ -1,37 +1,39 @@
 package com.example.matchservice.service;
 
 import com.example.matchservice.model.Match;
+import com.example.matchservice.repository.MatchRepository;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
+import java.util.Optional;
 
 @Service
 public class MatchService {
 
-    private final Random random = new Random();
+    private final MatchRepository matchRepository;
+
+    public MatchService(MatchRepository matchRepository) {
+        this.matchRepository = matchRepository;
+    }
+
+    public List<Match> getAllMatches() {
+        return matchRepository.findAll();
+    }
 
     public List<Match> findMatches(String reportId) {
-        // In a real application, this would use some matching algorithm
-        // For now, we'll return some mock matches
-        
-        List<Match> matches = new ArrayList<>();
-        
-        // Generate 0-3 random matches
-        int numberOfMatches = random.nextInt(4); // 0 to 3
-        
-        for (int i = 0; i < numberOfMatches; i++) {
-            Match match = new Match(
-                Long.valueOf(i + 1),
-                0.7 + random.nextDouble() * 0.3, // Score between 0.7 and 1.0
-                reportId,
-                "report-" + (random.nextInt(100) + 1) // Random matched report ID
-            );
-            matches.add(match);
-        }
-        
-        return matches;
+        return matchRepository.findByReportId(reportId);
+    }
+
+    public Optional<Match> getMatchById(Long id) {
+        return matchRepository.findById(id);
+    }
+
+    public Match createMatch(Match match) {
+        return matchRepository.save(match);
+    }
+
+    public void deleteMatch(Long id) {
+        matchRepository.deleteById(id);
     }
 
 }
