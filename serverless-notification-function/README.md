@@ -27,6 +27,21 @@ Esta funcion simula una AWS Lambda que recibe mensajes desde una cola cloud y pr
 
 La funcion recorre `event["Records"]`, toma cada `record["body"]`, lo interpreta como JSON y muestra en logs los datos del reporte para simular el procesamiento de la notificacion.
 
+## Prueba local
+
+Archivos de prueba incluidos:
+
+- `test_event.json`
+- `test_lambda.py`
+
+Ejecutar localmente:
+
+```powershell
+python test_lambda.py
+```
+
+Este comando carga `test_event.json`, invoca `lambda_handler(event, None)` y muestra en consola tanto los logs del procesamiento como la respuesta final de la funcion.
+
 ## Despliegue conceptual
 
 - AWS Lambda: se puede vincular a Amazon SQS para ejecucion automatica al llegar mensajes.

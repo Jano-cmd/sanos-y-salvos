@@ -1,0 +1,10 @@
+{
+  "Records": [
+    {
+      "body": "{\"reportId\":101,\"petName\":\"Luna\",\"location\":\"Bogota - Chapinero\",\"message\":\"Se reporto una mascota perdida cerca del parque principal\"}"
+    },
+    {
+      "body": "{\"reportId\":102,\"petName\":\"Max\",\"location\":\"Medellin - Laureles\",\"message\":\"Se recibio un nuevo reporte de mascota encontrada\"}"
+    }
+  ]
+}
