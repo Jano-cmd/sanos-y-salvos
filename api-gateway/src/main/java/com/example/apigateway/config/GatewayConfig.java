@@ -12,13 +12,17 @@ public class GatewayConfig {
     public RouteLocator gatewayRoutes(RouteLocatorBuilder builder) {
         return builder.routes()
                 .route("auth-service", r -> r.path("/auth/**")
-                        .uri("http://localhost:8081"))
+                        .uri("http://auth-service:8081"))
                 .route("user-service", r -> r.path("/users/**")
-                        .uri("http://localhost:8082"))
+                        .uri("http://user-service:8082"))
                 .route("pet-service", r -> r.path("/pets/**")
-                        .uri("http://localhost:8083"))
+                        .uri("http://pet-service:8083"))
                 .route("report-service", r -> r.path("/reports/**")
-                        .uri("http://localhost:8084"))
+                        .uri("http://report-service:8084"))
+                .route("match-service", r -> r.path("/matches/**")
+                        .uri("http://match-service:8085"))
+                .route("notification-service", r -> r.path("/notifications/**")
+                        .uri("http://notification-service:8086"))
                 .build();
     }
 
