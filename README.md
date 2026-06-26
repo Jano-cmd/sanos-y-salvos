@@ -101,11 +101,28 @@ O usando el script:
 .\scripts\swarm-remove.ps1
 ```
 
+## Cola cloud y funcion serverless
+
+Para la parte cloud de la entrega se documenta una cola llamada `sanos-report-queue`, usada para un flujo asincrono entre `report-service` y el procesamiento de notificaciones.
+
+- Productor: `report-service`
+- Cola: `sanos-report-queue`
+- Consumidor: funcion serverless
+- Resultado: procesamiento de notificacion
+
+Documentacion relacionada:
+
+- `docs/cloud-queue.md`
+- `serverless-notification-function/README.md`
+- `serverless-notification-function/lambda_function.py`
+
 ## Archivos principales
 
 - `docker-compose.yml`: entorno local
 - `docker-stack.yml`: despliegue Docker Swarm
+- `docs/cloud-queue.md`: documentacion de cola cloud
 - `scripts/swarm-init.ps1`: inicializa Swarm
 - `scripts/swarm-deploy.ps1`: despliega el stack
 - `scripts/swarm-scale.ps1`: escala `report-service`
 - `scripts/swarm-remove.ps1`: elimina el stack
+- `serverless-notification-function/lambda_function.py`: ejemplo de funcion serverless
