@@ -1,0 +1,104 @@
+version: "3.8"
+
+services:
+  api-gateway:
+    build: ./api-gateway
+    image: sanos-api-gateway:latest
+    container_name: sanos-api-gateway
+    ports:
+      - "8080:8080"
+    depends_on:
+      - auth-service
+      - user-service
+      - pet-service
+      - report-service
+      - match-service
+      - notification-service
+    networks:
+      - sanos-network
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+  auth-service:
+    build: ./auth-service
+    image: sanos-auth-service:latest
+    container_name: sanos-auth-service
+    ports:
+      - "8081:8081"
+    networks:
+      - sanos-network
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+
+  user-service:
+    build: ./user-service
+    image: sanos-user-service:latest
+    container_name: sanos-user-service
+    ports:
+      - "8082:8082"
+    networks:
+      - sanos-network
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+
+  pet-service:
+    build: ./pet-service
+    image: sanos-pet-service:latest
+    container_name: sanos-pet-service
+    ports:
+      - "8083:8083"
+    networks:
+      - sanos-network
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+
+  report-service:
+    build: ./report-service
+    image: sanos-report-service:latest
+    container_name: sanos-report-service
+    ports:
+      - "8084:8084"
+    networks:
+      - sanos-network
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+
+  match-service:
+    build: ./match-service
+    image: sanos-match-service:latest
+    container_name: sanos-match-service
+    ports:
+      - "8085:8085"
+    networks:
+      - sanos-network
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+  notification-service:
+    build: ./notification-service
+    image: sanos-notification-service:latest
+    container_name: sanos-notification-service
+    ports:
+      - "8086:8086"
+    networks:
+      - sanos-network
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+networks:
+  sanos-network:
+    driver: bridge
