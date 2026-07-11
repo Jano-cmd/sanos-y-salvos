@@ -24,3 +24,8 @@ management:
     web:
       exposure:
         include: health,info
+
+aws:
+  region: ${AWS_REGION:us-east-1}
+  sqs:
+    queue-url: ${AWS_SQS_QUEUE_URL:}

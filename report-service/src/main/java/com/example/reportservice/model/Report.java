@@ -11,7 +11,9 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.CreationTimestamp;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,6 +37,10 @@ public class Report {
 
     @Column(nullable = false)
     private Double lng;
+
+    @CreationTimestamp
+    @Column(nullable = false, updatable = false)
+    private Instant createdAt;
 
     @OneToMany(mappedBy = "report", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
@@ -79,6 +85,14 @@ public class Report {
 
     public void setLng(Double lng) {
         this.lng = lng;
+    }
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Instant createdAt) {
+        this.createdAt = createdAt;
     }
 
     public List<ReportImage> getImages() {
