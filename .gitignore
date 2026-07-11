@@ -31,6 +31,7 @@ Thumbs.db
 # Environment files
 .env
 .env.*
+!.env.ec2.example
 
 # Temporary files
 *.tmp

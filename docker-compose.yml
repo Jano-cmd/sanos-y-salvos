@@ -2,6 +2,8 @@ services:
   api-gateway:
     build: ./api-gateway
     image: sanos-api-gateway:latest
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
     ports:
       - "8080:8080"
     depends_on:

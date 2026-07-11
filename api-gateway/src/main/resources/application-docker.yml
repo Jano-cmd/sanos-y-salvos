@@ -1,0 +1,13 @@
+services:
+  auth:
+    url: http://auth-service:8081
+  user:
+    url: http://user-service:8082
+  pet:
+    url: http://pet-service:8083
+  report:
+    url: http://report-service:8084
+  match:
+    url: http://match-service:8085
+  notification:
+    url: http://notification-service:8086

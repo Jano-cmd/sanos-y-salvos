@@ -1,0 +1,137 @@
+services:
+  auth-service:
+    build:
+      context: ./auth-service
+    image: sanos-auth-service:ec2
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    networks:
+      - sanos-ec2-network
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1:8081/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+  user-service:
+    build:
+      context: ./user-service
+    image: sanos-user-service:ec2
+    restart: unless-stopped
+    ports:
+      - "8082:8082"
+    networks:
+      - sanos-ec2-network
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1:8082/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+  pet-service:
+    build:
+      context: ./pet-service
+    image: sanos-pet-service:ec2
+    restart: unless-stopped
+    ports:
+      - "8083:8083"
+    networks:
+      - sanos-ec2-network
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1:8083/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+  report-service:
+    build:
+      context: ./report-service
+    image: sanos-report-service:ec2
+    restart: unless-stopped
+    environment:
+      AWS_REGION: ${AWS_REGION:-us-east-1}
+      AWS_SQS_QUEUE_URL: ${AWS_SQS_QUEUE_URL:-}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      AWS_SESSION_TOKEN: ${AWS_SESSION_TOKEN:-}
+    ports:
+      - "8084:8084"
+    networks:
+      - sanos-ec2-network
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1:8084/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+  match-service:
+    build:
+      context: ./match-service
+    image: sanos-match-service:ec2
+    restart: unless-stopped
+    ports:
+      - "8085:8085"
+    networks:
+      - sanos-ec2-network
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1:8085/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+  notification-service:
+    build:
+      context: ./notification-service
+    image: sanos-notification-service:ec2
+    restart: unless-stopped
+    ports:
+      - "8086:8086"
+    networks:
+      - sanos-ec2-network
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1:8086/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+  api-gateway:
+    build:
+      context: ./api-gateway
+    image: sanos-api-gateway:ec2
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    ports:
+      - "8080:8080"
+    depends_on:
+      auth-service:
+        condition: service_healthy
+      user-service:
+        condition: service_healthy
+      pet-service:
+        condition: service_healthy
+      report-service:
+        condition: service_healthy
+      match-service:
+        condition: service_healthy
+      notification-service:
+        condition: service_healthy
+    networks:
+      - sanos-ec2-network
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+networks:
+  sanos-ec2-network:
+    driver: bridge

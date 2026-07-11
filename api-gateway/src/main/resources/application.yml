@@ -5,6 +5,20 @@ spring:
   application:
     name: api-gateway
 
+services:
+  auth:
+    url: ${AUTH_SERVICE_URL:http://localhost:8081}
+  user:
+    url: ${USER_SERVICE_URL:http://localhost:8082}
+  pet:
+    url: ${PET_SERVICE_URL:http://localhost:8083}
+  report:
+    url: ${REPORT_SERVICE_URL:http://localhost:8084}
+  match:
+    url: ${MATCH_SERVICE_URL:http://localhost:8085}
+  notification:
+    url: ${NOTIFICATION_SERVICE_URL:http://localhost:8086}
+
 # Optional: Actuator configuration for monitoring
 management:
   endpoints:
