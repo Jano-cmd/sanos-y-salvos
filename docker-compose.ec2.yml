@@ -11,9 +11,9 @@ services:
     healthcheck:
       test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1:8081/actuator/health"]
       interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 40s
+      timeout: 15s
+      retries: 10
+      start_period: 180s
 
   user-service:
     build:
@@ -27,9 +27,9 @@ services:
     healthcheck:
       test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1:8082/actuator/health"]
       interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 40s
+      timeout: 15s
+      retries: 10
+      start_period: 180s
 
   pet-service:
     build:
@@ -43,9 +43,9 @@ services:
     healthcheck:
       test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1:8083/actuator/health"]
       interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 40s
+      timeout: 15s
+      retries: 10
+      start_period: 180s
 
   report-service:
     build:
@@ -65,9 +65,9 @@ services:
     healthcheck:
       test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1:8084/actuator/health"]
       interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 40s
+      timeout: 15s
+      retries: 10
+      start_period: 180s
 
   match-service:
     build:
@@ -81,9 +81,9 @@ services:
     healthcheck:
       test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1:8085/actuator/health"]
       interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 40s
+      timeout: 15s
+      retries: 10
+      start_period: 180s
 
   notification-service:
     build:
@@ -97,9 +97,9 @@ services:
     healthcheck:
       test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1:8086/actuator/health"]
       interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 40s
+      timeout: 15s
+      retries: 10
+      start_period: 180s
 
   api-gateway:
     build:
@@ -128,9 +128,9 @@ services:
     healthcheck:
       test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1:8080/actuator/health"]
       interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 40s
+      timeout: 15s
+      retries: 10
+      start_period: 180s
 
 networks:
   sanos-ec2-network:

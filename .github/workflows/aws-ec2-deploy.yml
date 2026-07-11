@@ -106,13 +106,27 @@ jobs:
           docker compose --env-file .env.ec2 -f docker-compose.ec2.yml build match-service
           docker compose --env-file .env.ec2 -f docker-compose.ec2.yml build notification-service
 
-          docker compose --env-file .env.ec2 -f docker-compose.ec2.yml up -d
-
-          check_health() {
+          show_service_diagnostics() {
             service_name="$1"
-            url="$2"
-            attempts=30
-            sleep_seconds=20
+            container_id="$(docker compose --env-file .env.ec2 -f docker-compose.ec2.yml ps -q "$service_name")"
+
+            docker compose --env-file .env.ec2 -f docker-compose.ec2.yml ps
+
+            if [ -n "$container_id" ]; then
+              docker inspect --format '{{json .State.Health}}' "$container_id" || true
+            else
+              echo "No container found for $service_name"
+            fi
+
+            docker compose --env-file .env.ec2 -f docker-compose.ec2.yml logs --tail=200 "$service_name" || true
+          }
+
+          wait_for_health() {
+            service_name="$1"
+            port="$2"
+            attempts="$3"
+            url="http://localhost:${port}/actuator/health"
+            sleep_seconds=15
             attempt=1
 
             while [ "$attempt" -le "$attempts" ]; do
@@ -122,26 +136,31 @@ jobs:
                 return 0
               fi
 
-              echo "[$service_name] Health check attempt $attempt/$attempts not ready yet"
+              echo "[$service_name] Health check attempt $attempt/$attempts on port $port"
               sleep "$sleep_seconds"
               attempt=$((attempt + 1))
             done
 
             echo "$service_name failed health checks at $url"
+            show_service_diagnostics "$service_name"
             return 1
           }
 
-          if ! check_health api-gateway http://localhost:8080/actuator/health || \
-             ! check_health auth-service http://localhost:8081/actuator/health || \
-             ! check_health user-service http://localhost:8082/actuator/health || \
-             ! check_health pet-service http://localhost:8083/actuator/health || \
-             ! check_health report-service http://localhost:8084/actuator/health || \
-             ! check_health match-service http://localhost:8085/actuator/health || \
-             ! check_health notification-service http://localhost:8086/actuator/health; then
+          if ! docker compose --env-file .env.ec2 -f docker-compose.ec2.yml up -d; then
+            echo "docker compose up -d returned a non-zero exit code. Waiting for backend services before retrying api-gateway."
             docker compose --env-file .env.ec2 -f docker-compose.ec2.yml ps
-            docker compose --env-file .env.ec2 -f docker-compose.ec2.yml logs --tail=200
-            exit 1
           fi
+
+          wait_for_health auth-service 8081 20
+          wait_for_health user-service 8082 20
+          wait_for_health pet-service 8083 20
+          wait_for_health report-service 8084 20
+          wait_for_health match-service 8085 20
+          wait_for_health notification-service 8086 20
+
+          docker compose --env-file .env.ec2 -f docker-compose.ec2.yml up -d api-gateway
+
+          wait_for_health api-gateway 8080 20
 
           echo "Deployment completed successfully"
           echo "All 7 services are healthy"
