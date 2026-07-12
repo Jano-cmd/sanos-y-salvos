@@ -1,0 +1,91 @@
+name: AWS CloudFormation Deploy
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: aws-cloudformation-deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  deploy-serverless-stack:
+    name: Deploy CloudFormation Serverless Stack
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+      LAMBDA_EXECUTION_ROLE_ARN: ${{ secrets.LAMBDA_EXECUTION_ROLE_ARN }}
+      LAMBDA_CODE_S3_BUCKET: ${{ secrets.LAMBDA_CODE_S3_BUCKET }}
+      NOTIFICATION_SERVICE_URL: ${{ secrets.NOTIFICATION_SERVICE_URL }}
+      STACK_NAME: student-sanos-serverless
+      LAMBDA_PACKAGE_PATH: serverless-notification-function/sanos-report-processor.zip
+      LAMBDA_CODE_S3_KEY: lambda/serverless/${{ github.sha }}/sanos-report-processor.zip
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Verify required secrets
+        run: |
+          set -euo pipefail
+          test -n "$AWS_REGION" || { echo "AWS_REGION secret is not configured"; exit 1; }
+          test -n "$LAMBDA_EXECUTION_ROLE_ARN" || { echo "LAMBDA_EXECUTION_ROLE_ARN secret is not configured"; exit 1; }
+          test -n "$LAMBDA_CODE_S3_BUCKET" || { echo "LAMBDA_CODE_S3_BUCKET secret is not configured"; exit 1; }
+          test -n "$NOTIFICATION_SERVICE_URL" || { echo "NOTIFICATION_SERVICE_URL secret is not configured"; exit 1; }
+
+      - name: Run Lambda unit tests
+        working-directory: serverless-notification-function
+        run: python -m unittest test_lambda.py
+
+      - name: Package Lambda
+        run: bash ./scripts/package-lambda.sh
+
+      - name: Upload Lambda package to S3
+        run: |
+          set -euo pipefail
+          aws s3 cp "$LAMBDA_PACKAGE_PATH" "s3://$LAMBDA_CODE_S3_BUCKET/$LAMBDA_CODE_S3_KEY"
+
+      - name: Validate CloudFormation template
+        run: |
+          set -euo pipefail
+          aws cloudformation validate-template --template-body file://infrastructure/cloudformation/serverless-stack.yml
+
+      - name: Deploy CloudFormation stack
+        run: |
+          set -euo pipefail
+          aws cloudformation deploy \
+            --region "$AWS_REGION" \
+            --stack-name "$STACK_NAME" \
+            --template-file infrastructure/cloudformation/serverless-stack.yml \
+            --capabilities CAPABILITY_NAMED_IAM \
+            --parameter-overrides \
+              EnvironmentName=student \
+              NotificationServiceUrl="$NOTIFICATION_SERVICE_URL" \
+              LambdaExecutionRoleArn="$LAMBDA_EXECUTION_ROLE_ARN" \
+              LambdaCodeS3Bucket="$LAMBDA_CODE_S3_BUCKET" \
+              LambdaCodeS3Key="$LAMBDA_CODE_S3_KEY"
+
+      - name: Show stack outputs
+        run: |
+          set -euo pipefail
+          aws cloudformation describe-stacks \
+            --region "$AWS_REGION" \
+            --stack-name "$STACK_NAME" \
+            --query 'Stacks[0].Outputs' \
+            --output table

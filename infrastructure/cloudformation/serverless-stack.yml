@@ -1,0 +1,156 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Serverless infrastructure for sanos-y-salvos report processing.
+
+Parameters:
+  EnvironmentName:
+    Type: String
+    Default: student
+    AllowedPattern: '^[a-z0-9-]+$'
+    Description: Prefix used to avoid collisions with manual AWS Academy resources.
+  NotificationServiceUrl:
+    Type: String
+    Description: Public HTTP endpoint used by the Lambda to create notifications.
+    AllowedPattern: '^https?://.+$'
+    ConstraintDescription: NotificationServiceUrl must start with http:// or https://.
+  LambdaExecutionRoleArn:
+    Type: String
+    Description: Existing IAM role ARN used by the Lambda function, for example the AWS Academy LabRole.
+    AllowedPattern: '^arn:aws[a-z-]*:iam::[0-9]{12}:role\/.+$'
+    ConstraintDescription: LambdaExecutionRoleArn must be a valid IAM role ARN.
+  LambdaCodeS3Bucket:
+    Type: String
+    Description: S3 bucket that contains the Lambda deployment ZIP.
+  LambdaCodeS3Key:
+    Type: String
+    Description: S3 object key for the Lambda deployment ZIP.
+
+Resources:
+  LambdaExecutionPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName:
+        Fn::Sub: '${EnvironmentName}-sanos-report-processor-policy'
+      Roles:
+        - Fn::Select:
+            - 1
+            - Fn::Split:
+                - 'role/'
+                - Ref: LambdaExecutionRoleArn
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: ReportQueueAccess
+            Effect: Allow
+            Action:
+              - sqs:ChangeMessageVisibility
+              - sqs:DeleteMessage
+              - sqs:GetQueueAttributes
+              - sqs:GetQueueUrl
+              - sqs:ReceiveMessage
+            Resource:
+              Fn::GetAtt:
+                - ReportQueue
+                - Arn
+          - Sid: CloudWatchLogsAccess
+            Effect: Allow
+            Action:
+              - logs:CreateLogGroup
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+            Resource:
+              - Fn::Sub: 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${EnvironmentName}-sanos-report-processor:*'
+              - Fn::Sub: 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${EnvironmentName}-sanos-report-processor'
+
+  DeadLetterQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName:
+        Fn::Sub: '${EnvironmentName}-sanos-report-dlq'
+      MessageRetentionPeriod: 1209600
+      SqsManagedSseEnabled: true
+
+  ReportQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName:
+        Fn::Sub: '${EnvironmentName}-sanos-report-queue'
+      MessageRetentionPeriod: 345600
+      VisibilityTimeout: 60
+      SqsManagedSseEnabled: true
+      RedrivePolicy:
+        deadLetterTargetArn:
+          Fn::GetAtt:
+            - DeadLetterQueue
+            - Arn
+        maxReceiveCount: 3
+
+  ReportProcessorFunction:
+    Type: AWS::Lambda::Function
+    DependsOn:
+      - LambdaExecutionPolicy
+    Properties:
+      FunctionName:
+        Fn::Sub: '${EnvironmentName}-sanos-report-processor'
+      Runtime: python3.12
+      Handler: lambda_function.lambda_handler
+      Architectures:
+        - x86_64
+      Timeout: 15
+      MemorySize: 128
+      Role:
+        Ref: LambdaExecutionRoleArn
+      Code:
+        S3Bucket:
+          Ref: LambdaCodeS3Bucket
+        S3Key:
+          Ref: LambdaCodeS3Key
+      Environment:
+        Variables:
+          NOTIFICATION_SERVICE_URL:
+            Ref: NotificationServiceUrl
+
+  ReportQueueEventSource:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      EventSourceArn:
+        Fn::GetAtt:
+          - ReportQueue
+          - Arn
+      FunctionName:
+        Ref: ReportProcessorFunction
+      Enabled: true
+      BatchSize: 1
+      FunctionResponseTypes:
+        - ReportBatchItemFailures
+
+Outputs:
+  ReportQueueUrl:
+    Description: URL of the report queue created by CloudFormation.
+    Value:
+      Ref: ReportQueue
+  ReportQueueArn:
+    Description: ARN of the report queue created by CloudFormation.
+    Value:
+      Fn::GetAtt:
+        - ReportQueue
+        - Arn
+  DeadLetterQueueUrl:
+    Description: URL of the dead-letter queue created by CloudFormation.
+    Value:
+      Ref: DeadLetterQueue
+  DeadLetterQueueArn:
+    Description: ARN of the dead-letter queue created by CloudFormation.
+    Value:
+      Fn::GetAtt:
+        - DeadLetterQueue
+        - Arn
+  LambdaFunctionArn:
+    Description: ARN of the Lambda function created by CloudFormation.
+    Value:
+      Fn::GetAtt:
+        - ReportProcessorFunction
+        - Arn
+  LambdaFunctionName:
+    Description: Name of the Lambda function created by CloudFormation.
+    Value:
+      Ref: ReportProcessorFunction
