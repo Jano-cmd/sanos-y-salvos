@@ -1,10 +1,12 @@
 {
   "Records": [
     {
-      "body": "{\"reportId\":101,\"petName\":\"Luna\",\"location\":\"Bogota - Chapinero\",\"message\":\"Se reporto una mascota perdida cerca del parque principal\"}"
+      "messageId": "msg-101",
+      "body": "{\"reportId\":101,\"type\":\"LOST\",\"description\":\"Perro perdido cerca del parque principal\",\"createdAt\":\"2026-07-11T12:30:00Z\",\"lat\":4.711,\"lng\":-74.0721,\"imageUrls\":[\"https://example.com/reports/101-1.jpg\"]}"
     },
     {
-      "body": "{\"reportId\":102,\"petName\":\"Max\",\"location\":\"Medellin - Laureles\",\"message\":\"Se recibio un nuevo reporte de mascota encontrada\"}"
+      "messageId": "msg-102",
+      "body": "{\"reportId\":102,\"type\":\"FOUND\",\"description\":\"Mascota encontrada en Laureles\",\"createdAt\":\"2026-07-11T13:00:00Z\",\"lat\":6.2442,\"lng\":-75.5812,\"imageUrls\":[]}"
     }
   ]
 }
