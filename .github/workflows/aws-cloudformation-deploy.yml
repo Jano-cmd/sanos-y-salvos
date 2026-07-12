@@ -73,7 +73,6 @@ jobs:
             --region "$AWS_REGION" \
             --stack-name "$STACK_NAME" \
             --template-file infrastructure/cloudformation/serverless-stack.yml \
-            --capabilities CAPABILITY_NAMED_IAM \
             --parameter-overrides \
               EnvironmentName=student \
               NotificationServiceUrl="$NOTIFICATION_SERVICE_URL" \

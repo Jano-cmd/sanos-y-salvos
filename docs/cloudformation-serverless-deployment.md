@@ -9,6 +9,7 @@ Esta entrega agrega infraestructura como codigo para crear una cola SQS, su DLQ,
 - Recursos manuales actuales: la cola `sanos-report-queue`, la DLQ `sanos-report-dlq`, la Lambda `sanos-report-processor` y su trigger pueden seguir existiendo sin cambios.
 - Recursos CloudFormation: la plantilla crea un segundo conjunto aislado con prefijo por ambiente para evitar conflictos de nombre y evitar que CloudFormation intente adoptar recursos manuales existentes.
 - La plantilla no elimina ni modifica automaticamente los recursos manuales ya creados fuera del stack.
+- En AWS Academy no se crean recursos IAM desde esta plantilla porque `LabRole` suele bloquear `iam:PutRolePolicy` e `iam:DeleteRolePolicy`.
 
 ## Por que se usan nombres `student-*`
 
@@ -72,6 +73,8 @@ aws s3 cp serverless-notification-function/sanos-report-processor.zip s3://stude
 
 En AWS Academy normalmente puedes usar el rol existente `LabRole`.
 
+La plantilla reutiliza ese rol sin modificarlo. No crea `AWS::IAM::Policy`, no crea `AWS::IAM::Role` y no adjunta politicas inline ni administradas desde CloudFormation.
+
 Opciones para encontrar el ARN:
 
 1. AWS Console -> IAM -> Roles -> `LabRole`
@@ -116,7 +119,6 @@ aws cloudformation deploy \
   --region us-east-1 \
   --stack-name student-sanos-serverless \
   --template-file infrastructure/cloudformation/serverless-stack.yml \
-  --capabilities CAPABILITY_NAMED_IAM \
   --parameter-overrides \
     EnvironmentName=student \
     NotificationServiceUrl=http://<EC2_PUBLIC_IP>:8080/notifications \
@@ -225,4 +227,6 @@ aws cloudformation wait stack-delete-complete --region us-east-1 --stack-name st
 - Debes actualizar esos valores en tu terminal local y en GitHub Secrets cada nueva sesion.
 - No uses credenciales permanentes.
 - No intentes crear usuarios IAM.
-- Si `LabRole` no permite modificaciones IAM, revisa las politicas antes de desplegar o usa un rol existente con permisos para Lambda, SQS y CloudWatch Logs.
+- AWS Academy suele bloquear `iam:PutRolePolicy`, por eso este stack no intenta modificar `LabRole`.
+- `LabRole` debe tener previamente permisos suficientes para SQS y CloudWatch Logs para que la Lambda funcione correctamente.
+- Si `LabRole` no tiene permisos suficientes, debes usar un rol existente ya autorizado por el laboratorio; CloudFormation no intentara crearlo ni ampliarlo.
